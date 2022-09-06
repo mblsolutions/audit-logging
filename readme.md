@@ -70,8 +70,13 @@ EVENT_AUDIT_LOGGING_ENABLED=false
 
 ### Audit Logging Middleware
 
-To enable audit logging for routes there are multiple ways this can be achieved, a middleware alias has been created with
-the key `audit-logging`
+To enable audit logging for routes there are multiple ways this can be achieved, middleware aliases has been created
+
++ `web-audit-logging`
++ `api-audit-logging`
++ `console-audit-logging`
+
+The only differences with these middleware are the log type
 
 #### Single Route
 
@@ -82,7 +87,7 @@ use Illuminate\Routing\Route;
 
 Route::get('/user', function () {
     //
-})->middleware('audit-logging');
+})->middleware('web-audit-logging');
 ```
 
 Or by using the fully qualified class name
@@ -103,7 +108,7 @@ You can apply the middleware to a group of routes.
 ```php
 use Illuminate\Routing\Route;
 
-Route::middleware(['audit-logging'])->group(function () {
+Route::middleware(['web-audit-logging'])->group(function () {
 
     Route::get('/', function () {
         //
@@ -123,11 +128,11 @@ You can exclude specific routes in a group of middleware.
 ```php
 use Illuminate\Routing\Route;
 
-Route::middleware(['audit-logging'])->group(function () {
+Route::middleware(['api-audit-logging'])->group(function () {
 
     Route::get('/', function () {
         //
-    })->withoutMiddleware(['audit-logging']);
+    })->withoutMiddleware(['api-audit-logging']);
 
     Route::get('/user', function () {
         //

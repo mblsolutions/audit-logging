@@ -58,7 +58,7 @@ trait ShouldMaskSensitiveData
         return Str::limit(str_repeat('*', strlen($datum)), 32);
     }
 
-    private function isJson($data): bool
+    protected function isJson($data): bool
     {
         json_decode($data);
 

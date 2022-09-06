@@ -57,6 +57,19 @@ return [
 
     /*
      |--------------------------------------------------------------------------
+     | Log JSON Body Only
+     |--------------------------------------------------------------------------
+     |
+     | Only log the body of the request/response if it is of type JSON, this is
+     | useful to only capture data coming from API requests (and ignoring full
+     | HTML dumps)
+     |
+     */
+
+    'json_body_only' => env('AUDIT_LOGGING_JSON_BODY_ONLY', true),
+
+    /*
+     |--------------------------------------------------------------------------
      | Protected Keys
      |--------------------------------------------------------------------------
      |
@@ -91,18 +104,18 @@ return [
      | Audit Logging is disabled by default, you can enable audit logging by
      | setting enabled to true.
      |
-     | Drivers: "storage", "database"
+     | Drivers: "file", "database"
      |
-     | Please Note: The storage driver should only be used for only be used for
+     | Please Note: The file driver should only be used for only be used for
      | local development.
      |
      */
 
     'drivers' => [
 
-        'storage' => [
-            'driver' => \MBLSolutions\AuditLogging\Drivers\Log\Storage::class,
-            'path' => storage_path(env('AUDIT_LOGGING_STORAGE_PATH', 'logs/audit')),
+        'file' => [
+            'driver' => \MBLSolutions\AuditLogging\Drivers\Log\File::class,
+            'path' => storage_path(env('AUDIT_LOGGING_FILE_PATH', 'logs/audit')),
         ],
 
         'database' => [

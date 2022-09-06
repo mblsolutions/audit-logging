@@ -5,28 +5,25 @@ namespace MBLSolutions\AuditLogging\Jobs;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Http\Request;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use MBLSolutions\AuditLogging\Services\Log\AuditLoggingService;
+use MBLSolutions\AuditLogging\Support\DTO\RequestResponseDTO;
 
-class CreateAuditLog implements ShouldQueue
+class GenerateAuditLogJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public Request $request;
+    public RequestResponseDTO $dto;
 
-    public $response;
-
-    public function __construct(Request $request, $response)
+    public function __construct(RequestResponseDTO $dto)
     {
-        $this->request = $request;
-        $this->response = $response;
+        $this->dto = $dto;
     }
 
     public function handle(): void
     {
-        (new AuditLoggingService($this->request, $this->response))->createLog();
+        (new AuditLoggingService($this->dto))->createLog();
     }
 
 }

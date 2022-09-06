@@ -2,19 +2,16 @@
 
 namespace MBLSolutions\AuditLogging\Services\Log;
 
-use Illuminate\Http\Request;
 use MBLSolutions\AuditLogging\Drivers\Log\LogDriver;
+use MBLSolutions\AuditLogging\Support\DTO\RequestResponseDTO;
 
 class AuditLoggingService
 {
-    protected Request $request;
+    protected RequestResponseDTO $dto;
 
-    protected $response;
-
-    public function __construct(Request $request, $response)
+    public function __construct(RequestResponseDTO $dto)
     {
-        $this->request = $request;
-        $this->response = $response;
+        $this->dto = $dto;
     }
 
     public function createLog(): void
@@ -24,9 +21,10 @@ class AuditLoggingService
 
     public function getLogDriver(): LogDriver
     {
+        /** @var LogDriver $namespace */
         $namespace = config('audit-logging.drivers.' . config('audit-logging.logger') . '.driver');
 
-        return new $namespace($this->request, $this->response);
+        return new $namespace($this->dto);
     }
 
 }

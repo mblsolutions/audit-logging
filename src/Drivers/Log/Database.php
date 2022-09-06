@@ -3,30 +3,18 @@
 namespace MBLSolutions\AuditLogging\Drivers\Log;
 
 use Illuminate\Database\Query\Builder;
-use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use JsonException;
-use MBLSolutions\AuditLogging\Support\Concerns\ShouldMaskSensitiveData;
-use MBLSolutions\AuditLogging\Support\Enums\LogType;
+use MBLSolutions\AuditLogging\Support\DTO\RequestResponseDTO;
 
 class Database implements LogDriver
 {
-    use ShouldMaskSensitiveData;
-
-    protected Request $request;
-
-    protected $response;
+    public RequestResponseDTO $dto;
 
     private array $config;
 
-    public function __construct(Request $request, $response)
+    public function __construct(RequestResponseDTO $dto)
     {
-        $this->request = $request;
-        $this->response = $response;
-
+        $this->dto = $dto;
         $this->config = config('audit-logging.drivers.database');
     }
 
@@ -42,71 +30,28 @@ class Database implements LogDriver
     protected function mapAuditData(): array
     {
         return [
-            'id' => Str::uuid(),
-            'reference' => null, // TODO
-            'method' => $this->request->getMethod(),
-            'uri' => $this->request->getMethod(),
-            'status' => $this->response->getStatusCode(),
-            'type' => LogType::WEB, // TODO
-            'auth' => $this->getAuthentication(),
-            'request_headers' => config('audit-logging.loggable.request_header') ? $this->convertDataToJson($this->request->headers) : null,
-            'request_body' => config('audit-logging.loggable.request_body') ? $this->convertDataToJson($this->request->getContent()) : null,
-            'request_fingerprint' => $this->generateFingerprint($this->request->headers, $this->request->getContent()),
-            'response_headers' => config('audit-logging.loggable.response_header') ? $this->convertDataToJson($this->response->headers) : null,
-            'response_body' => config('audit-logging.loggable.response_body') ? $this->convertDataToJson($this->response->getContent()) : null,
-            'response_fingerprint' => $this->generateFingerprint($this->response->headers, $this->response->getContent()),
-            'remote_address' => $this->request->ip(),
-            'created_at' => $now = Carbon::now()->toDateTimeString(),
-            'updated_at' => Carbon::now()->toDateTimeString(),
+            'id' => $this->dto->id,
+            'reference' => $this->dto->reference,
+            'method' => $this->dto->method,
+            'uri' => $this->dto->uri,
+            'status' => $this->dto->status,
+            'type' => $this->dto->type,
+            'auth' => $this->dto->auth,
+            'request_headers' => $this->dto->requestHeaders,
+            'request_body' => $this->dto->requestBody,
+            'request_fingerprint' => $this->dto->requestFingerprint,
+            'response_headers' => $this->dto->responseHeader,
+            'response_body' => $this->dto->responseBody,
+            'response_fingerprint' => $this->dto->responseFingerprint,
+            'remote_address' => $this->dto->remoteAddress,
+            'created_at' => $this->dto->dateTime,
+            'updated_at' => $this->dto->dateTime,
         ];
-    }
-
-    public function getAuthentication(): ?string
-    {
-        $auth = Auth::guard(config('audit-logging.auth_guard'))->user();
-
-        try {
-            if ($auth) {
-                return json_encode([
-                    'id' => optional($auth)->getKey(),
-                    'name' => optional($auth)->getAttribute('name'),
-                    'email' => optional($auth)->getAttribute('email'),
-                ], JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
-            }
-        } catch (JsonException $e) {}
-
-        return null;
     }
 
     protected function getBuilder(): Builder
     {
         return DB::connection($this->config['connection'])->table($this->config['table']);
-    }
-
-    private function convertDataToJson($data = null): ?string
-    {
-        try {
-            if ($data !== null) {
-                $sanitised = $this->maskSensitiveData($data, config('audit-logging.protected_keys'));
-
-                if (is_string($sanitised)) {
-                    $sanitised = Str::limit($sanitised, config('audit-logging.max_loggable_length'));
-                }
-
-                return json_encode($sanitised, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
-            }
-        } catch (JsonException $e) {}
-
-        return null;
-    }
-
-    private function generateFingerprint($a = null, $b = null): ?string
-    {
-         if ($a !== null || $b !== null) {
-             return md5($a . $b);
-         }
-
-         return null;
     }
 
 }
