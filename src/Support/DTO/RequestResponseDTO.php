@@ -8,7 +8,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use JsonException;
 use MBLSolutions\AuditLogging\Support\Concerns\ShouldMaskSensitiveData;
-use MBLSolutions\AuditLogging\Support\Enums\LogType;
 
 class RequestResponseDTO
 {
@@ -33,11 +32,11 @@ class RequestResponseDTO
     public function __construct(string $type, Request $request, $response, Authenticatable $auth = null)
     {
         $this->id = Str::uuid();
-        $this->reference = null; // TODO
+        $this->reference = $this->handleRouteParameters($request);
         $this->method = $request->getMethod();
         $this->uri = $request->getRequestUri();
         $this->status = $response->getStatusCode();
-        $this->type = $type; // TODO
+        $this->type = $type;
         $this->remoteAddress = $request->ip();
         $this->auth = $this->handleAuthData($auth);
         $this->requestHeaders = config('audit-logging.loggable.request_header') ? $this->convertDataToJson($request->headers) : null;
@@ -85,6 +84,17 @@ class RequestResponseDTO
     {
         if ($a !== null || $b !== null) {
             return md5($a . $b);
+        }
+
+        return null;
+    }
+
+    public function handleRouteParameters(Request $request): ?string
+    {
+        $route = $request->route();
+
+        if ($route) {
+            return $this->convertDataToJson($route->originalParameters());
         }
 
         return null;
