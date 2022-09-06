@@ -1,3 +1,7 @@
+## v1.1.0
+
++ Log the route binding parameters that are being passed e.g. User ID, Order ID etc...
+
 ## v1.0.0
 
 + Add DTO to assist with job data serialisation
