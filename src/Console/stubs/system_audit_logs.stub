@@ -1,0 +1,45 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class Create{{tableClassName}}Table extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::connection(config('audit-logging.drivers.database.connection'))->create('{{table}}', function (Blueprint $table) {
+            $table->uuid('id');
+            $table->string('reference')->nullable()->index();
+            $table->string('method', 7)->nullable()->index();
+            $table->text('uri')->nullable()->index();
+            $table->smallInteger('status')->nullable()->index();
+            $table->string('type', 16)->index();
+            $table->json('auth')->nullable();
+            $table->json('request_headers')->nullable();
+            $table->json('request_body')->nullable();
+            $table->string('request_fingerprint', 32)->nullable();
+            $table->json('response_headers')->nullable();
+            $table->json('response_body')->nullable();
+            $table->string('response_fingerprint', 32)->nullable();
+            $table->string('remote_address', 39)->nullable()->index();
+            $table->timestamps();
+            $table->softDeletes();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::connection(config('audit-logging.drivers.database.connection'))->dropIfExists('{{table}}');
+    }
+}
