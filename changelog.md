@@ -1,3 +1,7 @@
+## v1.2.0
+
++ Mask sensitive data trait update
+
 ## v1.1.0
 
 + Log the route binding parameters that are being passed e.g. User ID, Order ID etc...

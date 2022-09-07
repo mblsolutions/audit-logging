@@ -55,7 +55,11 @@ trait ShouldMaskSensitiveData
 
     protected function mask($datum): string
     {
-        return Str::limit(str_repeat('*', strlen($datum)), 32);
+        if (is_string($datum)) {
+            return Str::limit(str_repeat('*', strlen($datum)), 32);
+        }
+
+        return '****';
     }
 
     protected function isJson($data): bool
