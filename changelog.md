@@ -1,3 +1,7 @@
+## v1.3.0
+
++ Remove Authenticatable typehint from RequestResponseDTO
+
 ## v1.2.0
 
 + Mask sensitive data trait update

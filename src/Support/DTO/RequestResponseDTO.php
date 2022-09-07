@@ -2,7 +2,6 @@
 
 namespace MBLSolutions\AuditLogging\Support\DTO;
 
-use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
@@ -29,7 +28,7 @@ class RequestResponseDTO
     public ?string $responseFingerprint = null;
     public string $dateTime;
 
-    public function __construct(string $type, Request $request, $response, Authenticatable $auth = null)
+    public function __construct(string $type, Request $request, $response, $auth = null)
     {
         $this->id = Str::uuid();
         $this->reference = $this->handleRouteParameters($request);
@@ -100,7 +99,7 @@ class RequestResponseDTO
         return null;
     }
 
-    public function handleAuthData(Authenticatable $auth = null): ?string
+    public function handleAuthData($auth = null): ?string
     {
         if ($auth) {
             return $this->convertDataToJson([
