@@ -1,3 +1,11 @@
+## v1.4.1
+
++ Add stripslashes to json decode so will result in array instead of string
+
+## v1.4.0
+
++ Update dependencies for laravel v10
+
 ## v1.3.0
 
 + Remove Authenticatable typehint from RequestResponseDTO

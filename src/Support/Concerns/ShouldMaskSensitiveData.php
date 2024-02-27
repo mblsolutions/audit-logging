@@ -29,7 +29,7 @@ trait ShouldMaskSensitiveData
     public function maskJsonData(string $data, array $protected): string
     {
         try {
-            $decoded = json_decode($data, true, config('audit-logging.max_loggable_length'), JSON_THROW_ON_ERROR);
+            $decoded = json_decode(stripslashes($data), true, config('audit-logging.max_loggable_length'), JSON_THROW_ON_ERROR);
 
             $sanitised = $this->maskArrayData($decoded, $protected);
 
