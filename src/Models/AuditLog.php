@@ -5,11 +5,10 @@ namespace MBLSolutions\AuditLogging\Models;
 use MBLSolutions\AuditLogging\Traits\BindsDynamically;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Lerouse\LaravelRepository\HasRepository;
 
 class AuditLog extends Model
 {
-    use SoftDeletes, HasRepository, BindsDynamically;
+    use SoftDeletes, BindsDynamically;
 
     protected $primaryKey = 'id';
 
