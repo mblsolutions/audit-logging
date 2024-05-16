@@ -1,3 +1,8 @@
+## v1.5.0
+
++ AB#44278 Add optional trait and model for retrieving audit logs
++ Add support for Laravel 11
+
 ## v1.4.1
 
 + Add stripslashes to json decode so will result in array instead of string
