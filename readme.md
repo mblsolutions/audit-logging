@@ -141,6 +141,25 @@ Route::middleware(['api-audit-logging'])->group(function () {
 });
 ```
 
+### Optional Model/Trait for Log Retrieval
+
+We have included an AuditLog Model with a BindsDynamically trait which you can use if you'd like to use an eloquent model for retrieving and formatting data.
+
++ **MBLSolutions\AuditLogging\Models\AuditLog** - Implements BindsDynamically trait. Can be extended if needed.
++ **MBLSolutions\AuditLogging\Traids\BindsDynamically** - Can be used in custom model or automatically as above.
+
+#### Using Model with BindsDynamically trait
+In order to use the AuditLog model (or any model implementing the BindsDynamically trait) you need to instantiate it with a connection and table as in the example below:
+```php
+
+$config = config('audit-logging.drivers.database');
+
+$auditLog = new MBLSolutions\AuditLogging\Models\AuditLog;
+$auditLog->setConnection($config['connection']);
+$auditLog->setTable($config['table']);
+```
+You can then use the `$auditLog` as you would any eloquent model.
+
 ## License
 
 Audit Logging is free software distributed under the terms of the MIT license.
