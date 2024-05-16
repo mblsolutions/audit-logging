@@ -17,6 +17,7 @@ class AuditLog extends Model
     public $incrementing = false;
 
     protected $fillable = [
+        'id',
         'reference',
         'method',
         'uri',
