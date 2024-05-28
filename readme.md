@@ -149,6 +149,7 @@ We have included an AuditLog Model with a BindsDynamically trait which you can u
 + **MBLSolutions\AuditLogging\Traids\BindsDynamically** - Can be used in custom model or automatically as above.
 
 #### Using Model with BindsDynamically trait
+
 In order to use the AuditLog model (or any model implementing the BindsDynamically trait) you need to instantiate it with a connection and table as in the example below:
 ```php
 
@@ -159,6 +160,29 @@ $auditLog->setConnection($config['connection']);
 $auditLog->setTable($config['table']);
 ```
 You can then use the `$auditLog` as you would any eloquent model.
+
+#### Archiving Logs
+
+If you would like to archive your logs and continue with a fresh table then you can use the archive command by running:
+
+````bash
+php artisan audit:database:archive
+````
+
+If you have installed fresh from version 1.6.0 you are good to go, otherwise if you have an existing installation from an earlier version you should run the update migration to add an index to the audit logs created_at column (if you have not already). You just need to publish the update with:  
+
+````bash
+php artisan audit:update:addindex
+````
+
+and then remember to run
+
+````bash
+php artisan migrate
+````
+
+This should be done as soon as possible after your archiving as the more data in the table the longer the migration will take.
+
 
 ## License
 
