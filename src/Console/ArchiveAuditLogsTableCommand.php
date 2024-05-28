@@ -66,13 +66,19 @@ class ArchiveAuditLogsTableCommand extends Command
         DB::connection(config('audit-logging.drivers.database.connection'))
             ->statement("CREATE TABLE $newTable LIKE $table");
 
+        $this->info('Created '.$newTable);
+
         //rename existing table to archive
         DB::connection(config('audit-logging.drivers.database.connection'))
             ->statement("ALTER TABLE $table RENAME $archivedTable");
 
+        $this->info('Renamed '.$table .' to '. $archivedTable);
+
         //rename new table to default log table name
         DB::connection(config('audit-logging.drivers.database.connection'))
             ->statement("ALTER TABLE $newTable RENAME $table");
+
+        $this->info('Renamed '.$newTable .' to '. $table);
 
         $this->info('Archiving successful!');
 
