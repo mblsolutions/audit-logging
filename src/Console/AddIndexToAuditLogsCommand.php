@@ -94,7 +94,7 @@ class AddIndexToAuditLogsCommand extends Command
         $stub = str_replace(
             ['{{table}}', '{{tableClassName}}'],
             [$table, $tableClassName],
-            $this->files->get(__DIR__.'/stubs/system_audit_logs.stub')
+            $this->files->get(__DIR__.'/stubs/add_index_system_audit_logs.stub')
         );
 
         $this->files->put($path, $stub);
