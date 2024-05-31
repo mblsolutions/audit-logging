@@ -30,6 +30,7 @@ class Create{{tableClassName}}Table extends Migration
             $table->string('remote_address', 39)->nullable()->index();
             $table->timestamps();
             $table->softDeletes();
+            $table->index(['created_at']);
         });
     }
 

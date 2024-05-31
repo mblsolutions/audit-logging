@@ -1,3 +1,7 @@
+## v1.6.0
+
++ AB#44278 Add optional migration and command for archiving
+
 ## v1.5.0
 
 + AB#44278 Add optional trait and model for retrieving audit logs

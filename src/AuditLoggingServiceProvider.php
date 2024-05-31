@@ -4,6 +4,8 @@ namespace MBLSolutions\AuditLogging;
 
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use MBLSolutions\AuditLogging\Console\AddIndexToAuditLogsCommand;
+use MBLSolutions\AuditLogging\Console\ArchiveAuditLogsTableCommand;
 use MBLSolutions\AuditLogging\Console\SystemAuditLogsTableCommand;
 use MBLSolutions\AuditLogging\Http\Middleware\ApiAuditLogging;
 use MBLSolutions\AuditLogging\Http\Middleware\ConsoleAuditLogging;
@@ -29,6 +31,8 @@ class AuditLoggingServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 SystemAuditLogsTableCommand::class,
+                AddIndexToAuditLogsCommand::class,
+                ArchiveAuditLogsTableCommand::class,
             ]);
         }
     }

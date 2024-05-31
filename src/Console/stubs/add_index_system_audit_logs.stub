@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class Update{{tableClassName}}TableAddIndex extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::connection(config('audit-logging.drivers.database.connection'))->table('{{table}}', function (Blueprint $table) {
+            $table->index(['created_at']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::connection(config('audit-logging.drivers.database.connection'))->table('{{table}}', function (Blueprint $table) {
+            $table->dropIndex(['created_at']);
+        });
+    }
+}
