@@ -40,7 +40,7 @@ abstract class AbstractMigrationCommand extends Command
         parent::__construct();
 
         if (! str_contains($this->name, '--force')) {
-            $this->name .= ' {--force}';
+            $this->name .= ' {{ --force }}';
         }
 
         $this->files = $files;
