@@ -7,7 +7,7 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Composer;
 use Illuminate\Support\Str;
 
-class AddIndexToAuditLogsCommand extends Command
+class AddIndexToAuditLogsCommand extends AbstractMigrationCommand
 {
     /**
      * The console command name.
@@ -24,16 +24,11 @@ class AddIndexToAuditLogsCommand extends Command
     protected $description = 'Add an index for created_at on existing database table';
 
     /**
-     * The filesystem instance.
+     * Name of the stub inside the stubs/ directory for the migration
      *
-     * @var Filesystem
+     * @var string
      */
-    protected $files;
-
-    /**
-     * @var Composer
-     */
-    protected $composer;
+    protected string $stub = 'add_index_system_audit_logs.stub';
 
     /**
      * Create a new queue job table command instance.
@@ -44,59 +39,6 @@ class AddIndexToAuditLogsCommand extends Command
      */
     public function __construct(Filesystem $files, Composer $composer)
     {
-        parent::__construct();
-
-        $this->files = $files;
-        $this->composer = $composer;
-    }
-
-    /**
-     * Execute the console command.
-     *
-     * @return void
-     */
-    public function handle()
-    {
-        $table = $this->laravel['config']['audit-logging.drivers.database.table'];
-
-        $this->replaceMigration(
-            $this->createBaseMigration($table), $table, Str::studly($table)
-        );
-
-        $this->info('Migration created successfully!');
-
-        $this->composer->dumpAutoloads();
-    }
-
-    /**
-     * Create a base migration file for the table.
-     *
-     * @param  string  $table
-     * @return string
-     */
-    protected function createBaseMigration($table = 'system_audit_logs')
-    {
-        return $this->laravel['migration.creator']->create(
-            'update_'.$table.'_table_add_index', $this->laravel->databasePath().'/migrations'
-        );
-    }
-
-    /**
-     * Replace the generated migration with the job table stub.
-     *
-     * @param  string  $path
-     * @param  string  $table
-     * @param  string  $tableClassName
-     * @return void
-     */
-    protected function replaceMigration($path, $table, $tableClassName)
-    {
-        $stub = str_replace(
-            ['{{table}}', '{{tableClassName}}'],
-            [$table, $tableClassName],
-            $this->files->get(__DIR__.'/stubs/add_index_system_audit_logs.stub')
-        );
-
-        $this->files->put($path, $stub);
+        parent::__construct($files, $composer);
     }
 }

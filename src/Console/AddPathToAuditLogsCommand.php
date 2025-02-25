@@ -7,28 +7,28 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Composer;
 use Illuminate\Support\Str;
 
-class SystemAuditLogsTableCommand extends AbstractMigrationCommand
+class AddPathToAuditLogsCommand extends AbstractMigrationCommand
 {
     /**
      * The console command name.
      *
      * @var string
      */
-    protected $name = 'audit:database:table';
+    protected $name = 'audit:update:add-path';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create a migration for the system audit logs database table';
+    protected $description = 'Publish migration to add a path column to audit logs table';
 
     /**
      * Name of the stub inside the stubs/ directory for the migration
      *
      * @var string
      */
-    protected string $stub = 'system_audit_logs.stub';
+    protected string $stub = 'add_path_to_audit_logs.stub';
 
     /**
      * Create a new queue job table command instance.
