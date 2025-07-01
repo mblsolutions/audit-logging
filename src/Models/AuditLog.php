@@ -31,5 +31,6 @@ class AuditLog extends Model
         'response_body',
         'response_fingerprint',
         'remote_address',
+        'user_id'
     ];
 }

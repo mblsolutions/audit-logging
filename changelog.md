@@ -1,3 +1,7 @@
+## v1.6.1
+
++ AB#76543 Add user id to provide key for users table correlation in RequestResponseDTO
+
 ## v1.6.0
 
 + AB#44278 Add optional migration and command for archiving

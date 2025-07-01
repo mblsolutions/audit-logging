@@ -27,6 +27,7 @@ class RequestResponseDTO
     public ?string $responseBody = null;
     public ?string $responseFingerprint = null;
     public string $dateTime;
+    public ?int $userId = null;
 
     public function __construct(string $type, Request $request, $response, $auth = null)
     {
@@ -45,6 +46,7 @@ class RequestResponseDTO
         $this->responseBody = config('audit-logging.loggable.response_body') ? $this->handleBodyIfJson($response) : null;
         $this->responseFingerprint = $this->generateFingerprint($response->headers, $response->getContent());
         $this->dateTime = Carbon::now()->toDateTimeString();
+        $this->userId = optional($auth)->getKey();
     }
 
     public function handleBodyIfJson($data): ?string

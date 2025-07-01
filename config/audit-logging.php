@@ -137,5 +137,13 @@ return [
 
     'auth_guard' => null,
 
-
+    /*
+     |--------------------------------------------------------------------------
+     | Extra column for data manipulation
+     |--------------------------------------------------------------------------
+     |
+     | The array of extra column in audit log table from DTO e.g. 'user_id' => 'userId'
+     |
+     */
+    'extra_column' => null,
 ];

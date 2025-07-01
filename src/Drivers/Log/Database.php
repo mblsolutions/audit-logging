@@ -29,7 +29,7 @@ class Database implements LogDriver
 
     protected function mapAuditData(): array
     {
-        return [
+        $mapAuditData = [
             'id' => $this->dto->id,
             'reference' => $this->dto->reference,
             'method' => $this->dto->method,
@@ -45,8 +45,20 @@ class Database implements LogDriver
             'response_fingerprint' => $this->dto->responseFingerprint,
             'remote_address' => $this->dto->remoteAddress,
             'created_at' => $this->dto->dateTime,
-            'updated_at' => $this->dto->dateTime,
+            'updated_at' => $this->dto->dateTime,            
         ];
+        
+        // Provide compatibility on data manipulation to import new version of audit log package
+        $extraColumn = config('audit-logging.extra_column');
+
+        if (!is_null($extraColumn)){
+            foreach ($extraColumn as $auditKey => $dtoProperty) {                
+                if (isset($this->dto->$dtoProperty)) {
+                    $mapAuditData[$auditKey] = $this->dto->$dtoProperty;
+                }
+            }
+        }
+        return $mapAuditData;
     }
 
     protected function getBuilder(): Builder
