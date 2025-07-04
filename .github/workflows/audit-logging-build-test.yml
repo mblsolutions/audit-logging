@@ -35,8 +35,10 @@ jobs:
           # Laravel 11.x and 12.x require PHP 8.2 or newer, so exclude them from PHP 8.1 builds
           - php: "8.1"
             laravel_version: "11.x"
+            testbench_version: "^9.0"
           - php: "8.1"
             laravel_version: "12.x"
+            testbench_version: "^9.0"
           - php: "8.2"
             laravel_version: "12.x"
 
