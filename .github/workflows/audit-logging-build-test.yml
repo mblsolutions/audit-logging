@@ -16,32 +16,31 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: ["8.0", "8.1"]
-        laravel: ["^6.0", "^7.0", "^8.0", "^9.0", "^10.0"]
-        testbench: ["^4.0", "^5.0", "^6.0", "^7.0", "^8.0"]
+        php: ["8.1", "8.2"]
+        laravel_version: ["10.x", "11.x", "12.x"]
+        
         include:
-          - php: "8.0"
-            laravel: "^8.0"
-            testbench: "^6.0"
+          # PHP 8.1 with Laravel 10.x requires Testbench ^6.0
           - php: "8.1"
-            laravel: "^9.0"
-            testbench: "^7.0"
-          - php: "8.1"
-            laravel: "^10.0"
-            testbench: "^8.0"
+            laravel_version: "10.x"
+            testbench_version: "^6.0" 
+          
+          # PHP 8.2 with Laravel 11.x requires Testbench ^7.0
+          - php: "8.2"
+            laravel_version: "11.x"
+            testbench_version: "^7.0" 
+          
+          # PHP 8.2 with Laravel 12.x requires Testbench ^8.0
+          - php: "8.2"
+            laravel_version: "12.x"
+            testbench_version: "^8.0" 
+
         exclude:
-          # Laravel 6 & 7 only support up to PHP 7.4, so always exclude
-          - php: "8.0"
-            laravel: "^6.0"
+          # Laravel 11.x and 12.x require PHP 8.2 or newer, so exclude them from PHP 8.1 builds
           - php: "8.1"
-            laravel: "^6.0"
-          - php: "8.0"
-            laravel: "^7.0"
+            laravel_version: "11.x"
           - php: "8.1"
-            laravel: "^7.0"
-          # Laravel 10: needs PHP 8.1+
-          - php: "8.0"
-            laravel: "^10.0"
+            laravel_version: "12.x"
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -58,11 +57,11 @@ jobs:
       - name: Validate composer.json and composer.lock
         run: composer validate
 
-      - name: Install required package
-        run: "composer require --no-interaction --no-update orchestra/testbench:${{ matrix.testbench }}"
-
       - name: Install dependencies
-        run: "composer update --with='illuminate/contracts:${{ matrix.laravel }}' --prefer-dist --no-interaction --no-progress --no-dev"
+        run: |
+          composer require "laravel/framework:${{ matrix.laravel_version }}" --no-update --no-interaction --prefer-dist
+          composer require "orchestra/testbench:${{ matrix.testbench_version }}" --no-update --no-interaction --prefer-dist
+          composer update --prefer-dist --no-interaction --no-progress
 
       - name: Execute tests via PHPUnit
         run: vendor/bin/phpunit
