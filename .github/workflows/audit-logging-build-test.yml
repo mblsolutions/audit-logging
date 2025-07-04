@@ -17,7 +17,7 @@ jobs:
       fail-fast: true
       matrix:
         php: ["8.1", "8.2"]
-        laravel_version: ["10.x", "11.x"]
+        laravel_version: ["10.x"]
         testbench_version: ["^8.0", "^9.0"]
         
         include:
@@ -28,8 +28,8 @@ jobs:
           
           # PHP 8.2 with Laravel 11.x requires Testbench ^7.0
           - php: "8.2"
-            laravel_version: "11.x"
-            testbench_version: "^9.0"            
+            laravel_version: "10.x"
+            testbench_version: "^8.0"            
 
         exclude:
           # Laravel 11.x and 12.x require PHP 8.2 or newer, so exclude them from PHP 8.1 builds
@@ -41,8 +41,10 @@ jobs:
             testbench_version: "^9.0"
           - php: "8.2"
             laravel_version: "11.x"
+            testbench_version: "^9.0"
           - php: "8.2"
             laravel_version: "12.x"
+            testbench_version: "^9.0"
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
