@@ -38,6 +38,8 @@ jobs:
           - php: "8.1"
             laravel_version: "12.x"
           - php: "8.2"
+            laravel_version: "11.x"
+          - php: "8.2"
             laravel_version: "12.x"
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
