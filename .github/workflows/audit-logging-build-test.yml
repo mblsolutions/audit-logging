@@ -59,7 +59,7 @@ jobs:
         run: composer validate
 
       - name: Install dependencies
-        run: "composer require \"laravel/framework:${{ matrix.laravel_version }}\" --no-update --no-interaction --prefer-dist && composer require \"orchestra/testbench:${{ matrix.testbench_version }}\" --no-update --no-interaction --prefer-dist && composer update --prefer-dist --no-interaction --no-progress"
+        run: "composer require --dev \"laravel/framework:${{ matrix.laravel_version }}\" --no-update --no-interaction --prefer-dist && composer require --dev \"orchestra/testbench:${{ matrix.testbench_version }}\" --no-update --no-interaction --prefer-dist && composer update --prefer-dist --no-interaction --no-progress"
 
       - name: Execute tests via PHPUnit
         run: vendor/bin/phpunit
