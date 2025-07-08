@@ -68,6 +68,20 @@ AUDIT_LOGGING_ENABLED=true
 EVENT_AUDIT_LOGGING_ENABLED=false
 ```
 
+### Enable/Disable extra logging information
+
+From version 1.6.1, you could specify what extra column is needed to keep the application free from database migration on existing database schema in newer version.
+
+```php
+// Disable the extra logging information
+'extra_column' => null
+// OR Enable the extra logging information
+// Define an array of extra logging information for new database column from RequestResponseDTO property
+'extra_column' => [
+    'user_id' => 'userId'
+]
+```
+
 ### Audit Logging Middleware
 
 To enable audit logging for routes there are multiple ways this can be achieved, middleware aliases has been created
