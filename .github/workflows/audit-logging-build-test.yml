@@ -12,17 +12,22 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
-        php: ["8.0", "8.1"]
-        laravel: ["^6.0", "^7.0", "^8.0", "^9.0"]
+        php: ["8.1", "8.2"]
+        laravel_version: ["^10.0","^11.0"]
+        testbench_version: ["^8.0","^9.0"]
+        
         exclude:
+          # Laravel 11.x and 12.x require PHP 8.2 or newer, so exclude them from PHP 8.1 builds
           - php: "8.1"
-            laravel: "^6.0"
-          - php: "8.1"
-            laravel: "^7.0"
+            laravel_version: "^11.0"
+          - laravel_version: "^10.0"
+            testbench_version: "^9.0"
+          - laravel_version: "^11.0"
+            testbench_version: "^8.0"
 
     name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -40,7 +45,10 @@ jobs:
         run: composer validate
 
       - name: Install dependencies
-        run: "composer update --with='illuminate/contracts:${{ matrix.laravel }}' --prefer-dist --no-interaction --no-progress"
+        run: |
+          composer require --dev "laravel/framework:${{ matrix.laravel_version }}" --no-update --no-interaction --prefer-dist
+          composer require --dev "orchestra/testbench:${{ matrix.testbench_version }}" --no-update --no-interaction --prefer-dist
+          composer update --with="illuminate/contracts:${{ matrix.laravel_version }}" --prefer-dist --no-interaction --no-progress          
 
       - name: Execute tests via PHPUnit
         run: vendor/bin/phpunit
