@@ -1,3 +1,7 @@
+## v2.0.0
+
++ AB#114580 Upgrade Laravel to v12.
+
 ## v1.6.1
 
 + AB#76543 Add user id to provide key for users table correlation in RequestResponseDTO
