@@ -39,10 +39,10 @@ class RequestResponseDTO
         $this->type = $type;
         $this->remoteAddress = $request->ip();
         $this->auth = $this->handleAuthData($auth);
-        $this->requestHeaders = config('audit-logging.loggable.request_header') ? $this->convertDataToJson($request->headers) : null;
+        $this->requestHeaders = config('audit-logging.loggable.request_header') ? $this->convertDataToJson($request->headers?->all()) : null;
         $this->requestBody = config('audit-logging.loggable.request_body') ? $this->handleBodyIfJson($request) : null;
         $this->requestFingerprint = $this->generateFingerprint($request->headers, $request->getContent());
-        $this->responseHeader = config('audit-logging.loggable.response_header') ? $this->convertDataToJson($response->headers) : null;
+        $this->responseHeader = config('audit-logging.loggable.response_header') ? $this->convertDataToJson($response->headers?->all()) : null;
         $this->responseBody = config('audit-logging.loggable.response_body') ? $this->handleBodyIfJson($response) : null;
         $this->responseFingerprint = $this->generateFingerprint($response->headers, $response->getContent());
         $this->dateTime = Carbon::now()->toDateTimeString();
@@ -68,10 +68,10 @@ class RequestResponseDTO
     {
         try {
             if ($data !== null) {
-                $sanitised = $this->maskSensitiveData($data, config('audit-logging.protected_keys'));
+                $sanitised = $this->maskSensitiveData($data, config('audit-logging.protected_keys', []));
 
                 if (is_string($sanitised)) {
-                    $sanitised = Str::limit($sanitised, config('audit-logging.max_loggable_length'));
+                    $sanitised = Str::limit($sanitised, config('audit-logging.max_loggable_length', 10024));
                 }
 
                 return json_encode($sanitised, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
