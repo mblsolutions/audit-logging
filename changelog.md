@@ -1,3 +1,7 @@
+## v2.0.1
+
++ AB#119420 Fix the request and response header in DTO
+
 ## v2.0.0
 
 + AB#114580 Upgrade Laravel to v12.
