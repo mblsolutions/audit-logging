@@ -28,6 +28,9 @@ Copy the package configuration to your local config directory.
 php artisan vendor:publish --tag=audit-logging-config
 ```
 
+Keys and drivers missing from your published config (e.g. `cloudwatch` and `stack` in configs published before v2.1.0)
+are filled in from the package config, so you don't need to publish it again. Your values always win.
+
 ### Database Driver
 
 If you would like to use the Database driver to store your audit logs, you will first need to create and run the database
@@ -81,6 +84,44 @@ From version 1.6.1, you could specify what extra column is needed to keep the ap
     'user_id' => 'userId'
 ]
 ```
+
+### CloudWatch Driver
+
+Sends each audit log to a CloudWatch Logs group as one JSON event. Search fields (`user_id`, `route`, `status`,
+`request_id`, `trace_id`, ...) are at the top, request and response bodies are JSON objects.
+
+```dotenv
+AUDIT_LOGGING_LOGGER=cloudwatch
+AUDIT_LOGGING_SYSTEM=quik-gift
+AUDIT_LOGGING_CLOUDWATCH_GROUP=/audit/quik-gift/production
+AUDIT_LOGGING_CLOUDWATCH_REGION=eu-west-2
+```
+
++ On Vapor leave `AUDIT_LOGGING_CLOUDWATCH_KEY` and `AUDIT_LOGGING_CLOUDWATCH_SECRET` empty. The Lambda role is used, so it
+  needs `logs:CreateLogStream` and `logs:PutLogEvents` on the log group.
++ If the log group is in another AWS account, set `AUDIT_LOGGING_CLOUDWATCH_ROLE_ARN` to a role that can write to it.
++ One stream per day (UTC) is created on first use. Set `AUDIT_LOGGING_CLOUDWATCH_STREAM` for a fixed stream.
++ Events over `AUDIT_LOGGING_CLOUDWATCH_MAX_EVENT_BYTES` (default 256 KB) have their bodies removed and `truncated: true`.
+
+To write to the database and CloudWatch at the same time (for example while moving over), use the stack driver:
+
+```dotenv
+AUDIT_LOGGING_LOGGER=stack
+AUDIT_LOGGING_STACK=database,cloudwatch
+```
+
+Each driver gets its own queued job, so a retry on one never writes twice to the other. A job tries 5 times over about
+20 minutes. After that it goes to `failed_jobs` (retry it with `queue:retry`) and one line goes to the app log.
+
+### Protected Keys
+
+Values of `protected_keys` are masked in request and response bodies, headers, route parameters and the logged URI
+(query string and route values). Keys match in any case, so `pin` also masks `PIN`.
+
+#### Adding app ids
+
+Set `context_resolver` to a class implementing `MBLSolutions\AuditLogging\Contracts\ResolvesAuditContext` to add ids such
+as `account_id` or `order_id` to every event.
 
 ### Audit Logging Middleware
 

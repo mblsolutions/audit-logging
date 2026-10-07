@@ -1,3 +1,14 @@
+## v2.1.0
+
++ Add CloudWatch and stack drivers
++ Add route, duration, user agent, request id, trace id and app context to the DTO
++ Fill in missing config keys and drivers from the package config
++ Always mask auth and cookie headers
++ Mask protected keys in any case, in the URI and in JSON with escaped quotes
++ Retry audit jobs 5 times and log failures without bodies
++ Don't break the request when audit logging fails
++ Accept "1" for AUDIT_LOGGING_ENABLED
+
 ## v2.0.1
 
 + AB#119420 Fix the request and response header in DTO
