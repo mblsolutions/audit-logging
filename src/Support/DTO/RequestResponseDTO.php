@@ -4,6 +4,7 @@ namespace MBLSolutions\AuditLogging\Support\DTO;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use JsonException;
 use MBLSolutions\AuditLogging\Support\Concerns\ShouldMaskSensitiveData;
@@ -42,9 +43,18 @@ class RequestResponseDTO
     public ?string $responseFingerprint = null;
     public string $dateTime;
     public ?int $userId = null;
+    public ?int $occurredAtMs = null;
+    public ?string $route = null;
+    public ?int $durationMs = null;
+    public ?string $userAgent = null;
+    public ?string $requestId = null;
+    public ?string $traceId = null;
+    public ?string $awsRequestId = null;
+    public array $context = [];
 
     public function __construct(string $type, Request $request, $response, $auth = null)
     {
+        $this->occurredAtMs = (int) floor(microtime(true) * 1000);
         $this->id = Str::uuid();
         $this->reference = $this->handleRouteParameters($request);
         $this->method = $request->getMethod();
@@ -61,6 +71,13 @@ class RequestResponseDTO
         $this->responseFingerprint = $this->generateFingerprint($response->headers, $response->getContent());
         $this->dateTime = Carbon::now()->toDateTimeString();
         $this->userId = optional($auth)->getKey();
+        $this->route = $this->handleRouteName($request);
+        $this->durationMs = $this->handleDuration($request);
+        $this->userAgent = $this->limitHeader($request->userAgent(), 512);
+        $this->requestId = $this->limitHeader($request->headers->get('X-Request-Id'), 128);
+        $this->traceId = $this->handleTraceId();
+        $this->awsRequestId = $_ENV['AWS_REQUEST_ID'] ?? $_SERVER['AWS_REQUEST_ID'] ?? null;
+        $this->context = $this->handleContext($request, $response, $auth);
     }
 
     /**
@@ -88,6 +105,66 @@ class RequestResponseDTO
         }
 
         return $values;
+    }
+
+    public function handleRouteName(Request $request): ?string
+    {
+        $route = $request->route();
+
+        if (! $route) {
+            return null;
+        }
+
+        return $route->getName() ?: $route->uri();
+    }
+
+    public function handleDuration(Request $request): ?int
+    {
+        $start = defined('LARAVEL_START') ? LARAVEL_START : $request->server('REQUEST_TIME_FLOAT');
+
+        return $start ? (int) round((microtime(true) - (float) $start) * 1000) : null;
+    }
+
+    public function handleTraceId(): ?string
+    {
+        if (class_exists(\OpenTelemetry\API\Trace\Span::class)) {
+            $context = \OpenTelemetry\API\Trace\Span::getCurrent()->getContext();
+
+            if ($context->isValid()) {
+                return $context->getTraceId();
+            }
+        }
+
+        // keepsuit/laravel-opentelemetry ends the request span before terminate(), but keeps the id in the log context.
+        $shared = Log::sharedContext();
+        $traceId = $shared['traceid'] ?? $shared['trace_id'] ?? null;
+
+        return is_string($traceId) ? $traceId : null;
+    }
+
+    public function handleContext(Request $request, $response, $auth = null): array
+    {
+        $resolver = config('audit-logging.context_resolver');
+
+        if (! $resolver) {
+            return [];
+        }
+
+        try {
+            $context = app($resolver)->resolve($request, $response, $auth);
+
+            return $this->maskArrayData(array_filter($context, 'is_scalar'), config('audit-logging.protected_keys', []));
+        } catch (\Throwable $exception) {
+            // Never break the request because of audit context.
+            report($exception);
+        }
+
+        return [];
+    }
+
+    protected function limitHeader(?string $value, int $length): ?string
+    {
+        return $value === null || $value === '' ? null : Str::limit($value, $length, '');
     }
 
     public function handleBodyIfJson($data): ?string

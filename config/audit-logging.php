@@ -40,6 +40,18 @@ return [
 
     /*
      |--------------------------------------------------------------------------
+     | Context Resolver
+     |--------------------------------------------------------------------------
+     |
+     | Class implementing ResolvesAuditContext. Adds app ids (account_id,
+     | order_id, client_id, ...) to each audit event so it can be searched.
+     |
+     */
+
+    'context_resolver' => null,
+
+    /*
+     |--------------------------------------------------------------------------
      | Loggable Elements
      |--------------------------------------------------------------------------
      |
