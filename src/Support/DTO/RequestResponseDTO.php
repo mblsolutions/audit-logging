@@ -12,6 +12,20 @@ class RequestResponseDTO
 {
     use ShouldMaskSensitiveData;
 
+    /** Always masked in logged headers, whatever the app's protected_keys say. */
+    public const SENSITIVE_HEADERS = [
+        'authorization',
+        // Symfony copies Basic/Digest Authorization headers into these.
+        'php-auth-pw',
+        'php-auth-digest',
+        'proxy-authorization',
+        'cookie',
+        'set-cookie',
+        'x-xsrf-token',
+        'x-csrf-token',
+        'x-api-key',
+    ];
+
     public string $id;
     public ?string $reference = null;
     public ?string $method = null;
@@ -39,10 +53,10 @@ class RequestResponseDTO
         $this->type = $type;
         $this->remoteAddress = $request->ip();
         $this->auth = $this->handleAuthData($auth);
-        $this->requestHeaders = config('audit-logging.loggable.request_header') ? $this->convertDataToJson($request->headers?->all()) : null;
+        $this->requestHeaders = config('audit-logging.loggable.request_header') ? $this->convertHeadersToJson($request->headers?->all()) : null;
         $this->requestBody = config('audit-logging.loggable.request_body') ? $this->handleBodyIfJson($request) : null;
         $this->requestFingerprint = $this->generateFingerprint($request->headers, $request->getContent());
-        $this->responseHeader = config('audit-logging.loggable.response_header') ? $this->convertDataToJson($response->headers?->all()) : null;
+        $this->responseHeader = config('audit-logging.loggable.response_header') ? $this->convertHeadersToJson($response->headers?->all()) : null;
         $this->responseBody = config('audit-logging.loggable.response_body') ? $this->handleBodyIfJson($response) : null;
         $this->responseFingerprint = $this->generateFingerprint($response->headers, $response->getContent());
         $this->dateTime = Carbon::now()->toDateTimeString();
@@ -79,6 +93,17 @@ class RequestResponseDTO
         } catch (JsonException $e) {}
 
         return null;
+    }
+
+    public function convertHeadersToJson(?array $headers): ?string
+    {
+        if ($headers === null) {
+            return null;
+        }
+
+        $protected = array_merge(config('audit-logging.protected_keys', []), self::SENSITIVE_HEADERS);
+
+        return $this->convertDataToJson($this->maskArrayData($headers, $protected));
     }
 
     public function generateFingerprint($a = null, $b = null): ?string
