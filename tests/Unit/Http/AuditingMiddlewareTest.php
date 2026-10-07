@@ -75,6 +75,16 @@ class AuditingMiddlewareTest extends LaravelTestCase
     }
 
     #[Test]
+    public function it_accepts_string_values_for_the_enabled_flag(): void
+    {
+        config(['audit-logging.enabled' => '1', 'audit-logging.logger' => 'database']);
+
+        $this->terminate();
+
+        Queue::assertPushed(GenerateAuditLogJob::class, 1);
+    }
+
+    #[Test]
     public function nothing_is_dispatched_when_disabled(): void
     {
         config(['audit-logging.enabled' => false]);

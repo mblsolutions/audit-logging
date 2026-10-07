@@ -25,7 +25,7 @@ abstract class AuditingMiddleware
 
     protected function isAuditLoggingEnabled(): bool
     {
-        return config('audit-logging.enabled') === true;
+        return filter_var(config('audit-logging.enabled'), FILTER_VALIDATE_BOOLEAN);
     }
 
 }
