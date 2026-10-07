@@ -40,6 +40,17 @@ return [
 
     /*
      |--------------------------------------------------------------------------
+     | System Name
+     |--------------------------------------------------------------------------
+     |
+     | Added to every CloudWatch audit event, e.g. "simfoni" or "quik-gift".
+     |
+     */
+
+    'system' => env('AUDIT_LOGGING_SYSTEM', \Illuminate\Support\Str::slug(env('APP_NAME', 'laravel'))),
+
+    /*
+     |--------------------------------------------------------------------------
      | Queue
      |--------------------------------------------------------------------------
      |
@@ -127,7 +138,10 @@ return [
      | Audit Logging is disabled by default, you can enable audit logging by
      | setting enabled to true.
      |
-     | Drivers: "file", "database"
+     | Drivers: "file", "database", "cloudwatch", "stack"
+     |
+     | "stack" writes to every driver in drivers.stack.drivers. Use it to write
+     | to the database and CloudWatch at the same time while moving over.
      |
      | Please Note: The file driver should only be used for only be used for
      | local development.
@@ -145,6 +159,20 @@ return [
             'driver' => \MBLSolutions\AuditLogging\Drivers\Log\Database::class,
             'connection' => env('AUDIT_LOGGING_DB_CONNECTION', env('DB_CONNECTION', 'mysql')),
             'table' => env('AUDIT_LOGGING_TABLE', 'system_audit_logs'),
+        ],
+
+        'cloudwatch' => [
+            'driver' => \MBLSolutions\AuditLogging\Drivers\Log\CloudWatch::class,
+            'group' => env('AUDIT_LOGGING_CLOUDWATCH_GROUP'),
+            // Empty means one stream per day (UTC), e.g. 2026/09/29.
+            'stream' => env('AUDIT_LOGGING_CLOUDWATCH_STREAM'),
+            'region' => env('AUDIT_LOGGING_CLOUDWATCH_REGION', env('AWS_DEFAULT_REGION', 'eu-west-2')),
+            // Leave key and secret empty on Vapor: the Lambda role is used.
+            'key' => env('AUDIT_LOGGING_CLOUDWATCH_KEY'),
+            'secret' => env('AUDIT_LOGGING_CLOUDWATCH_SECRET'),
+            // Only when the log group is in another AWS account.
+            'role_arn' => env('AUDIT_LOGGING_CLOUDWATCH_ROLE_ARN'),
+            'max_event_bytes' => env('AUDIT_LOGGING_CLOUDWATCH_MAX_EVENT_BYTES', \MBLSolutions\AuditLogging\CloudWatch\CloudWatchWriter::DEFAULT_EVENT_BYTES),
         ],
 
         'stack' => [
