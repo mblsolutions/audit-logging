@@ -4,6 +4,7 @@ namespace MBLSolutions\AuditLogging\Tests\Unit\Support\DTO;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Route;
 use MBLSolutions\AuditLogging\Support\DTO\RequestResponseDTO;
 use MBLSolutions\AuditLogging\Support\Enums\LogType;
 use MBLSolutions\AuditLogging\Tests\LaravelTestCase;
@@ -86,4 +87,29 @@ class RequestResponseDTOTest extends LaravelTestCase
         $this->assertSame('****', $digestHeaders['php-auth-digest']);
     }
 
+    #[Test]
+    public function it_masks_protected_keys_in_the_uri(): void
+    {
+        config(['audit-logging.protected_keys' => ['token', 'pan', 'pin']]);
+
+        $request = Request::create('/api/reset-password/secret-token?pan=6331101999990016&pin=1234&page=2', 'GET');
+        $route = (new Route('GET', 'api/reset-password/{token}', fn () => null))->bind($request);
+        $request->setRouteResolver(fn () => $route);
+
+        $dto = new RequestResponseDTO(LogType::API, $request, new Response('{}', 200));
+
+        $this->assertSame('/api/reset-password/************?pan=****************&pin=****&page=2', $dto->uri);
+    }
+
+    #[Test]
+    public function it_keeps_the_uri_when_nothing_is_protected(): void
+    {
+        $request = Request::create('/api/orders/123?page=2', 'GET');
+        $route = (new Route('GET', 'api/orders/{order}', fn () => null))->bind($request);
+        $request->setRouteResolver(fn () => $route);
+
+        $dto = new RequestResponseDTO(LogType::API, $request, new Response('{}', 200));
+
+        $this->assertSame('/api/orders/123?page=2', $dto->uri);
+    }
 }

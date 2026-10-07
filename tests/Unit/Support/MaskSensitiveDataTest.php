@@ -41,6 +41,26 @@ class MaskSensitiveDataTest extends LaravelTestCase
     }
 
     #[Test]
+    public function it_masks_protected_keys_in_a_query_string(): void
+    {
+        $query = 'pan=6331101999990016&PIN=1234&card%5Bpin%5D=9876&amount=10&page=';
+
+        $this->assertSame(
+            'pan=****************&PIN=****&card%5Bpin%5D=****&amount=10&page=',
+            $this->masker->maskQueryString($query, ['pan', 'pin'])
+        );
+    }
+
+    #[Test]
+    public function it_masks_path_segments_that_hold_a_protected_value(): void
+    {
+        $this->assertSame(
+            '/api/reset-password/************/confirm',
+            $this->masker->maskPathSegments('/api/reset-password/secret-token/confirm', ['secret-token'])
+        );
+    }
+
+    #[Test]
     public function it_leaves_non_json_strings_alone(): void
     {
         $this->assertSame('plain text', $this->masker->maskSensitiveData('plain text', ['password']));

@@ -48,7 +48,7 @@ class RequestResponseDTO
         $this->id = Str::uuid();
         $this->reference = $this->handleRouteParameters($request);
         $this->method = $request->getMethod();
-        $this->uri = $request->getRequestUri();
+        $this->uri = $this->handleUri($request);
         $this->status = $response->getStatusCode();
         $this->type = $type;
         $this->remoteAddress = $request->ip();
@@ -61,6 +61,33 @@ class RequestResponseDTO
         $this->responseFingerprint = $this->generateFingerprint($response->headers, $response->getContent());
         $this->dateTime = Carbon::now()->toDateTimeString();
         $this->userId = optional($auth)->getKey();
+    }
+
+    /**
+     * The request URI with protected keys masked in the query string and in route values.
+     */
+    public function handleUri(Request $request): string
+    {
+        $protected = config('audit-logging.protected_keys', []);
+        [$path, $query] = array_pad(explode('?', $request->getRequestUri(), 2), 2, null);
+
+        $path = $this->maskPathSegments($path, $this->protectedRouteValues($request, $protected));
+
+        return $query === null ? $path : $path . '?' . $this->maskQueryString($query, $protected);
+    }
+
+    protected function protectedRouteValues(Request $request, array $protected): array
+    {
+        $protected = array_map(fn ($key) => strtolower((string) $key), $protected);
+        $values = [];
+
+        foreach ($request->route()?->originalParameters() ?? [] as $name => $value) {
+            if (is_string($value) && $value !== '' && in_array(strtolower((string) $name), $protected, true)) {
+                $values[] = $value;
+            }
+        }
+
+        return $values;
     }
 
     public function handleBodyIfJson($data): ?string
