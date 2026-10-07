@@ -28,24 +28,32 @@ trait ShouldMaskSensitiveData
 
     public function maskJsonData(string $data, array $protected): string
     {
-        try {
-            $decoded = json_decode(stripslashes($data), true, config('audit-logging.max_loggable_length', 10024), JSON_THROW_ON_ERROR);
+        // Plain decode first: stripslashes breaks valid JSON with escaped quotes, which skipped masking.
+        foreach ([$data, stripslashes($data)] as $candidate) {
+            try {
+                $decoded = json_decode($candidate, true, 512, JSON_THROW_ON_ERROR);
 
-            $sanitised = $this->maskArrayData($decoded, $protected);
+                if (! is_array($decoded)) {
+                    return $data;
+                }
 
-            return json_encode($sanitised, JSON_THROW_ON_ERROR);
-        } catch (JsonException $e) {}
+                return json_encode($this->maskArrayData($decoded, $protected), JSON_THROW_ON_ERROR);
+            } catch (JsonException $e) {}
+        }
 
         return $data;
     }
 
     public function maskArrayData(array $data, array $protected): array
     {
+        $protected = array_map(fn ($key) => strtolower((string) $key), $protected);
+
         foreach ($data as $key => $datum) {
             if (is_array($datum)) {
                 $data[$key] = $this->maskArrayData($datum, $protected);
             }
-            if (in_array($key, $protected, true)) {
+            // Case-insensitive, so "PIN" and "Pan" are masked too.
+            if (in_array(strtolower((string) $key), $protected, true)) {
                 $data[$key] = $this->mask($datum);
             }
         }
