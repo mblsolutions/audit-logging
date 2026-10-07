@@ -3,8 +3,10 @@
 namespace MBLSolutions\AuditLogging\Drivers\Log;
 
 use Illuminate\Database\Query\Builder;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use MBLSolutions\AuditLogging\Support\DTO\RequestResponseDTO;
+use RuntimeException;
 
 class Database implements LogDriver
 {
@@ -22,7 +24,12 @@ class Database implements LogDriver
     {
         $data = $this->mapAuditData();
 
-        $this->getBuilder()->insert($data);
+        try {
+            $this->getBuilder()->insert($data);
+        } catch (QueryException $exception) {
+            // The message holds the insert SQL with the bodies, and the queue worker reports it. Throw one without them.
+            throw new RuntimeException("Audit log insert failed (SQLSTATE {$exception->getCode()}, table {$this->config['table']}).");
+        }
 
         return true;
     }

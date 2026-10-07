@@ -2,13 +2,16 @@
 
 namespace MBLSolutions\AuditLogging\Tests\Unit\Http;
 
+use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Queue;
 use MBLSolutions\AuditLogging\Http\Middleware\ApiAuditLogging;
 use MBLSolutions\AuditLogging\Jobs\GenerateAuditLogJob;
 use MBLSolutions\AuditLogging\Tests\LaravelTestCase;
 use PHPUnit\Framework\Attributes\Test;
+use RuntimeException;
 
 class AuditingMiddlewareTest extends LaravelTestCase
 {
@@ -82,6 +85,20 @@ class AuditingMiddlewareTest extends LaravelTestCase
         $this->terminate();
 
         Queue::assertPushed(GenerateAuditLogJob::class, 1);
+    }
+
+    #[Test]
+    public function an_audit_error_is_reported_and_does_not_break_the_request(): void
+    {
+        Exceptions::fake();
+        config(['audit-logging.enabled' => true, 'audit-logging.logger' => 'database']);
+
+        // e.g. the audit queue doesn't exist.
+        $this->mock(Dispatcher::class, fn ($mock) => $mock->shouldReceive('dispatch')->andThrow(new RuntimeException('Queue does not exist.')));
+
+        $this->terminate();
+
+        Exceptions::assertReported(fn (RuntimeException $exception) => $exception->getMessage() === 'Queue does not exist.');
     }
 
     #[Test]
