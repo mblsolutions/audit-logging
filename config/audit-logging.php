@@ -40,6 +40,17 @@ return [
 
     /*
      |--------------------------------------------------------------------------
+     | Queue
+     |--------------------------------------------------------------------------
+     |
+     | Queue for the audit log jobs. Null uses the default queue.
+     |
+     */
+
+    'queue' => env('AUDIT_LOGGING_QUEUE'),
+
+    /*
+     |--------------------------------------------------------------------------
      | Context Resolver
      |--------------------------------------------------------------------------
      |
@@ -134,6 +145,10 @@ return [
             'driver' => \MBLSolutions\AuditLogging\Drivers\Log\Database::class,
             'connection' => env('AUDIT_LOGGING_DB_CONNECTION', env('DB_CONNECTION', 'mysql')),
             'table' => env('AUDIT_LOGGING_TABLE', 'system_audit_logs'),
+        ],
+
+        'stack' => [
+            'drivers' => explode(',', env('AUDIT_LOGGING_STACK', 'database,cloudwatch')),
         ],
 
     ],

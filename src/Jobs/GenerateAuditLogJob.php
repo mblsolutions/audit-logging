@@ -16,14 +16,17 @@ class GenerateAuditLogJob implements ShouldQueue
 
     public RequestResponseDTO $dto;
 
-    public function __construct(RequestResponseDTO $dto)
+    public ?string $driver = null;
+
+    public function __construct(RequestResponseDTO $dto, ?string $driver = null)
     {
         $this->dto = $dto;
+        $this->driver = $driver;
     }
 
     public function handle(): void
     {
-        (new AuditLoggingService($this->dto))->createLog();
+        (new AuditLoggingService($this->dto, $this->driver))->createLog();
     }
 
 }
