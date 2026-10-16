@@ -28,29 +28,78 @@ trait ShouldMaskSensitiveData
 
     public function maskJsonData(string $data, array $protected): string
     {
-        try {
-            $decoded = json_decode(stripslashes($data), true, config('audit-logging.max_loggable_length', 10024), JSON_THROW_ON_ERROR);
+        // Plain decode first: stripslashes breaks valid JSON with escaped quotes, which skipped masking.
+        foreach ([$data, stripslashes($data)] as $candidate) {
+            try {
+                $decoded = json_decode($candidate, true, 512, JSON_THROW_ON_ERROR);
 
-            $sanitised = $this->maskArrayData($decoded, $protected);
+                if (! is_array($decoded)) {
+                    return $data;
+                }
 
-            return json_encode($sanitised, JSON_THROW_ON_ERROR);
-        } catch (JsonException $e) {}
+                return json_encode($this->maskArrayData($decoded, $protected), JSON_THROW_ON_ERROR);
+            } catch (JsonException $e) {}
+        }
 
         return $data;
     }
 
     public function maskArrayData(array $data, array $protected): array
     {
+        $protected = array_map(fn ($key) => strtolower((string) $key), $protected);
+
         foreach ($data as $key => $datum) {
             if (is_array($datum)) {
                 $data[$key] = $this->maskArrayData($datum, $protected);
             }
-            if (in_array($key, $protected, true)) {
+            // Case-insensitive, so "PIN" and "Pan" are masked too.
+            if (in_array(strtolower((string) $key), $protected, true)) {
                 $data[$key] = $this->mask($datum);
             }
         }
 
         return $data;
+    }
+
+    /**
+     * Mask protected keys in a query string, e.g. "pan=123&page=2" → "pan=***&page=2".
+     * Nested keys count too: "card[pin]" is masked when "card" or "pin" is protected.
+     */
+    public function maskQueryString(string $query, array $protected): string
+    {
+        $protected = array_map(fn ($key) => strtolower((string) $key), $protected);
+        $pairs = explode('&', $query);
+
+        foreach ($pairs as $i => $pair) {
+            [$key, $value] = array_pad(explode('=', $pair, 2), 2, '');
+            $names = preg_split('/[\[\]]+/', strtolower(urldecode($key)), -1, PREG_SPLIT_NO_EMPTY);
+
+            if ($value !== '' && array_intersect($names, $protected)) {
+                $pairs[$i] = $key . '=' . $this->mask(urldecode($value));
+            }
+        }
+
+        return implode('&', $pairs);
+    }
+
+    /**
+     * Mask path segments that hold one of the given values, e.g. a {token} route parameter.
+     */
+    public function maskPathSegments(string $path, array $values): string
+    {
+        if ($values === []) {
+            return $path;
+        }
+
+        $segments = explode('/', $path);
+
+        foreach ($segments as $i => $segment) {
+            if ($segment !== '' && in_array(rawurldecode($segment), $values, true)) {
+                $segments[$i] = $this->mask(rawurldecode($segment));
+            }
+        }
+
+        return implode('/', $segments);
     }
 
     protected function mask($datum): string

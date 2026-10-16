@@ -4,9 +4,11 @@ namespace MBLSolutions\AuditLogging\Tests\Unit\Support\DTO;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Routing\Route;
 use MBLSolutions\AuditLogging\Support\DTO\RequestResponseDTO;
 use MBLSolutions\AuditLogging\Support\Enums\LogType;
 use MBLSolutions\AuditLogging\Tests\LaravelTestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class RequestResponseDTOTest extends LaravelTestCase
 {
@@ -65,5 +67,49 @@ class RequestResponseDTOTest extends LaravelTestCase
         $this->assertIsArray($responseHeaders);
         $this->assertArrayHasKey('x-response-test', $responseHeaders);
         $this->assertSame('RespValue', $responseHeaders['x-response-test'][0]);
+    }
+
+    #[Test]
+    public function it_masks_basic_and_digest_auth_copies_of_the_authorization_header(): void
+    {
+        config(['audit-logging.loggable.request_header' => true]);
+
+        $basic = Request::create('/api/test', 'GET', [], [], [], ['HTTP_AUTHORIZATION' => 'Basic ' . base64_encode('alice:s3cret-pass')]);
+        $digest = Request::create('/api/test', 'GET', [], [], [], ['HTTP_AUTHORIZATION' => 'Digest username="alice", response="6629fae49393a053"']);
+
+        $basicHeaders = json_decode((new RequestResponseDTO(LogType::API, $basic, new Response('{}', 200)))->requestHeaders, true);
+        $digestHeaders = json_decode((new RequestResponseDTO(LogType::API, $digest, new Response('{}', 200)))->requestHeaders, true);
+
+        $this->assertSame('****', $basicHeaders['authorization']);
+        $this->assertSame('****', $basicHeaders['php-auth-pw']);
+        $this->assertSame(['alice'], $basicHeaders['php-auth-user']);
+        $this->assertSame('****', $digestHeaders['authorization']);
+        $this->assertSame('****', $digestHeaders['php-auth-digest']);
+    }
+
+    #[Test]
+    public function it_masks_protected_keys_in_the_uri(): void
+    {
+        config(['audit-logging.protected_keys' => ['token', 'pan', 'pin']]);
+
+        $request = Request::create('/api/reset-password/secret-token?pan=6331101999990016&pin=1234&page=2', 'GET');
+        $route = (new Route('GET', 'api/reset-password/{token}', fn () => null))->bind($request);
+        $request->setRouteResolver(fn () => $route);
+
+        $dto = new RequestResponseDTO(LogType::API, $request, new Response('{}', 200));
+
+        $this->assertSame('/api/reset-password/************?pan=****************&pin=****&page=2', $dto->uri);
+    }
+
+    #[Test]
+    public function it_keeps_the_uri_when_nothing_is_protected(): void
+    {
+        $request = Request::create('/api/orders/123?page=2', 'GET');
+        $route = (new Route('GET', 'api/orders/{order}', fn () => null))->bind($request);
+        $request->setRouteResolver(fn () => $route);
+
+        $dto = new RequestResponseDTO(LogType::API, $request, new Response('{}', 200));
+
+        $this->assertSame('/api/orders/123?page=2', $dto->uri);
     }
 }
